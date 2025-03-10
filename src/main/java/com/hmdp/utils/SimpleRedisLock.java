@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class SimpleRedisLock implements ILock {
     private String name;
     private StringRedisTemplate stringRedisTemplate;
-    private static final String KET_PREFIX="lock:";
+    private static final String KEY_PREFIX="lock:";
     private static final String ID_PREFIX= UUID.randomUUID().toString(true)+"-";
     private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
 
@@ -40,7 +40,7 @@ public class SimpleRedisLock implements ILock {
         //获取锁
         Boolean isSuccess = stringRedisTemplate
                 .opsForValue()
-                .setIfAbsent(KET_PREFIX + name
+                .setIfAbsent(KEY_PREFIX + name
                         , threadId
                         , timeoutSec
                         , TimeUnit.SECONDS);
@@ -61,7 +61,7 @@ public class SimpleRedisLock implements ILock {
         }*/
         //使用lua脚本保证操作原子性
         stringRedisTemplate.execute(UNLOCK_SCRIPT
-                , Collections.singletonList(KET_PREFIX+name)
+                , Collections.singletonList(KEY_PREFIX+name)
                 ,ID_PREFIX+Thread.currentThread().getId());
     }
 }

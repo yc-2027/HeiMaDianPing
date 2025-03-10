@@ -11,11 +11,13 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.ISeckillVoucherService;
 import com.hmdp.service.IVoucherOrderService;
 import com.hmdp.utils.RedisIdWorker;
+import com.hmdp.utils.SimpleRedisLock;
 import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.stream.*;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -222,49 +225,49 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * @param voucherId 券id
      * @return {@link Result}
      */
-    /*@Override
-    public Result seckillVoucher(Long voucherId) {
-        //查询优惠券
-        SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
-        //判断秒杀是否开始
-        if (voucher.getBeginTime().isAfter(LocalDateTime.now())) {
-            //秒杀尚未开始
-            return Result.fail("秒杀尚未开始");
-        }
-        if (voucher.getEndTime().isBefore(LocalDateTime.now())) {
-            //秒杀已经结束
-            return Result.fail("秒杀已经结束");
-        }
-        //判断库存是否充足
-        if (voucher.getStock() < 1) {
-            //库存不足
-            return Result.fail("库存不足");
-        }
-        Long userId = UserHolder.getUser().getId();
-        //仅限单体应用使用
+//    @Override
+//    public Result seckillVoucher(Long voucherId) {
+//        //查询优惠券
+//        SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
+//        //判断秒杀是否开始
+//        if (voucher.getBeginTime().isAfter(LocalDateTime.now())) {
+//            //秒杀尚未开始
+//            return Result.fail("秒杀尚未开始");
+//        }
+//        if (voucher.getEndTime().isBefore(LocalDateTime.now())) {
+//            //秒杀已经结束
+//            return Result.fail("秒杀已经结束");
+//        }
+//        //判断库存是否充足
+//        if (voucher.getStock() < 1) {
+//            //库存不足
+//            return Result.fail("库存不足");
+//        }
+//        Long userId = UserHolder.getUser().getId();
+//        //仅限单体应用使用
 //        synchronized (userId.toString().intern()) {
 //            //实现获取代理对象 比较复杂 我采用了自己注入自己的方式
 //            IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
 //            return voucherOrderService.getResult(voucherId);
 //        }
-        //创建锁对象
+//        //创建锁对象
 //        SimpleRedisLock simpleRedisLock = new SimpleRedisLock("order:" + userId, stringRedisTemplate);
-        RLock lock = redissonClient.getLock("lock:order:" + userId);
-        //获取锁
+//        RLock lock = redissonClient.getLock("lock:order:" + userId);
+//        //获取锁
 //        boolean isLock = simpleRedisLock.tryLock(1200L);
-        boolean isLock = lock.tryLock();
-        //判断是否获取锁成功
-        if (!isLock){
-            //获取失败,返回错误或者重试
-            return Result.fail("一人一单哦！");
-        }
-        try {
-            return voucherOrderService.getResult(voucherId);
-        } finally {
-            //释放锁
-            lock.unlock();
-        }
-    }*/
+//        boolean isLock = lock.tryLock();
+//        //判断是否获取锁成功
+//        if (!isLock){
+//            //获取失败,返回错误或者重试
+//            return Result.fail("一人一单哦！");
+//        }
+//        try {
+//            return voucherOrderService.getResult(voucherId);
+//        } finally {
+//            //释放锁
+//            lock.unlock();
+//        }
+//    }
     @Override
     @NotNull
     @Transactional(rollbackFor = Exception.class)
